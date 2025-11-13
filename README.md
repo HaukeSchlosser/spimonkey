@@ -16,7 +16,6 @@ SPIMonkey provides a clean, structured C **API** for controlling SPI devices on 
 -  **Batch Transfers** — Execute multiple SPI transactions in a single syscall for improved performance
 -  **Automatic Validation** — Configurations are sanitized and clamped to valid ranges before driver application
 -  **Config Synchronization** — Keep cached settings in sync with kernel driver state
--  **Capability Probing** — Query driver-reported limits (max speed, supported modes)
 -  **Dependency Injection** — Custom system operations for unit testing without hardware
 -  **Comprehensive Testing** — Extensive unit tests with configurable failure injection
 -  **Documentation** — Doxygen-style API docs with usage examples
@@ -120,7 +119,6 @@ gcc -std=c11 -O2 -Wall example.c -o example -lspimonkey
 | `spm_dev_set_speed()` | Set clock frequency (convenience) |
 | `spm_dev_set_mode()` | Set SPI mode: MODE0..MODE3 |
 | `spm_dev_set_bpw()` | Set bits-per-word |
-| `spm_dev_get_caps()` | Query device capabilities (best-effort) |
 
 ### Device Info
 
@@ -187,17 +185,6 @@ spm_dev_get_cfg(dev, &current);
 printf("Applied speed: %u Hz\n", current.speed_hz);
 ```
 
-### Capability Probing
-
-```c
-spm_cap_t caps;
-spm_dev_get_caps(dev, &caps);
-
-printf("Max speed: %u Hz\n", caps.max_speed_hz);
-printf("BPW range: %u-%u\n", caps.min_bits_per_word, caps.max_bits_per_word);
-printf("Supported modes: 0x%08X\n", caps.features);
-```
-
 ---
 
 ##  Testing
@@ -218,7 +205,6 @@ This executes:
 - Configuration management (get/set/refresh)
 - Data transfers (read/write/full-duplex/batch)
 - Error handling and parameter validation
-- Capability probing
 - Buffer safety (null pointers, zero lengths)
 - Failure injection (simulated driver errors)
 

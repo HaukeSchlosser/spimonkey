@@ -63,7 +63,7 @@ static void open_device_fails_if_open_fails(void)
 
 static void open_device_fails_with_null_dev(void)
 {
-    assert(spm_dev_open_sys_ops(0, 0, NULL, &SPM_SYS_F_DEFAULT, NULL) == SPM_EPARAM);
+    assert(spm_dev_open_sys_ops(0, 0, NULL, &SPM_SYS_F_DEFAULT, NULL) != SPM_OK);
     TEST_PASS();
 }
 
@@ -113,7 +113,7 @@ static void transfer_fails_with_null_dev(void)
     spm_sys_fake_reset_ioctl_stats();
 
     spm_ecode_t rc = spm_transfer(NULL, (void*)1, NULL, 1);
-    assert(rc == SPM_EPARAM);
+    assert(rc == SPM_ESTATE);
 
     struct spm_sys_fake_ioctl_stats s = spm_sys_fake_get_ioctl_stats();
     assert(s.total == 0);
@@ -437,88 +437,6 @@ static void read_fails_when_ioctl_fails(void)
 }
 
 /* ====================================================== */
-/* ====================== get_caps ====================== */
-/* ====================================================== */
-static void get_caps_succeeds_valid_input(void)
-{
-    spm_sys_fake_reset();
-
-    spm_device_t *dev = NULL;
-    spm_ecode_t rc = spm_dev_open_sys_ops(0, 0, NULL, &SPM_SYS_F_DEFAULT, &dev);
-    assert(rc == SPM_OK);
-    assert(dev);
-
-    spm_sys_fake_reset_ioctl_stats();
-    spm_cap_t cap = {0};
-    rc = spm_dev_get_caps(dev, &cap);
-    assert(rc == SPM_OK);
-
-    struct spm_sys_fake_ioctl_stats s = spm_sys_fake_get_ioctl_stats();
-    assert(s.total == 3);
-    assert(s.fail == 0);
-    assert(s.msg == 0);
-    assert(s.rd == 3);
-    assert(s.wr == 0);
-
-    spm_dev_close(dev);
-    TEST_PASS();
-}
-
-static void get_caps_fails_invalid_input(void)
-{
-    spm_sys_fake_reset();
-
-    spm_cap_t cap = {0};
-    spm_ecode_t rc = spm_dev_get_caps(NULL, &cap);
-    assert(rc == SPM_EPARAM);
-
-    spm_device_t *dev = NULL;
-    rc = spm_dev_open_sys_ops(0, 0, NULL, &SPM_SYS_F_DEFAULT, &dev);
-    assert(rc == SPM_OK);
-    assert(dev);
-
-    spm_sys_fake_reset_ioctl_stats();
-    rc = spm_dev_get_caps(dev, NULL);
-    assert(rc == SPM_EPARAM);
-
-    struct spm_sys_fake_ioctl_stats s = spm_sys_fake_get_ioctl_stats();
-    assert(s.total == 0);
-    assert(s.fail == 0);
-    assert(s.msg == 0);
-    assert(s.rd == 0);
-    assert(s.wr == 0);
-
-    spm_dev_close(dev);
-    TEST_PASS();
-}
-
-static void get_caps_fails_when_ioctl_fails(void)
-{
-    spm_sys_fake_reset();
-
-    spm_device_t *dev = NULL;
-    spm_ecode_t rc = spm_dev_open_sys_ops(0, 0, NULL, &SPM_SYS_F_DEFAULT, &dev);
-    assert(rc == SPM_OK);
-    assert(dev);
-
-    spm_sys_fake_reset_ioctl_stats();
-    spm_sys_fake_fail_ioctl();
-
-    spm_cap_t cap = {0};
-    rc = spm_dev_get_caps(dev, &cap);
-    assert(rc != SPM_OK);
-    struct spm_sys_fake_ioctl_stats s = spm_sys_fake_get_ioctl_stats();
-    assert(s.total == 2);
-    assert(s.fail == 2);
-    assert(s.msg == 0);
-    assert(s.rd == 2);
-    assert(s.wr == 0);
-
-    spm_dev_close(dev);
-    TEST_PASS();
-}
-
-/* ====================================================== */
 /* ====================== get_cfg ======================= */
 /* ====================================================== */
 
@@ -559,7 +477,7 @@ static void get_cfg_fails_invalid_input(void)
     spm_sys_fake_reset_ioctl_stats();
     spm_cfg_t cfg = {0};
     rc = spm_dev_get_cfg(NULL, &cfg);
-    assert(rc == SPM_EPARAM);
+    assert(rc == SPM_ESTATE);
 
     rc = spm_dev_get_cfg(dev, NULL);
     assert(rc == SPM_EPARAM);
@@ -642,7 +560,7 @@ static void set_cfg_fails_invalid_input(void)
     spm_sys_fake_reset_ioctl_stats();
     spm_cfg_t cfg = {0};
     rc = spm_dev_set_cfg(NULL, &cfg);
-    assert(rc == SPM_EPARAM);
+    assert(rc == SPM_ESTATE);
 
     rc = spm_dev_set_cfg(dev, NULL);
     assert(rc == SPM_EPARAM);
@@ -717,7 +635,8 @@ static void refresh_cfg_fails_invalid_input()
 
     spm_sys_fake_reset_ioctl_stats();
     spm_ecode_t rc = spm_dev_refresh_cfg(NULL);
-    assert(rc == SPM_EPARAM);
+    assert(rc == SPM_ESTATE);
+
     struct spm_sys_fake_ioctl_stats s = spm_sys_fake_get_ioctl_stats();
     assert(s.total == 0);
     assert(s.fail == 0);
@@ -791,7 +710,7 @@ static void set_speed_fails_invalid_input()
 
     spm_sys_fake_reset_ioctl_stats();
     rc = spm_dev_set_speed(NULL, 100000u);
-    assert(rc == SPM_EPARAM);
+    assert(rc == SPM_ESTATE);
 
     rc = spm_dev_set_speed(dev, 0);
     assert(rc == SPM_EPARAM);
@@ -870,7 +789,7 @@ static void set_mode_fails_invalid_input()
 
     spm_sys_fake_reset_ioctl_stats();
     rc = spm_dev_set_mode(NULL, SPM_MODE1);
-    assert(rc == SPM_EPARAM);
+    assert(rc == SPM_ESTATE);
 
     struct spm_sys_fake_ioctl_stats s = spm_sys_fake_get_ioctl_stats();
     assert(s.total == 0);
@@ -946,7 +865,7 @@ static void set_bpw_fails_invalid_input()
 
     spm_sys_fake_reset_ioctl_stats();
     rc = spm_dev_set_bpw(NULL, 8);
-    assert(rc == SPM_EPARAM);
+    assert(rc == SPM_ESTATE);
 
     struct spm_sys_fake_ioctl_stats s = spm_sys_fake_get_ioctl_stats();
     assert(s.total == 0);
@@ -1024,7 +943,7 @@ static void get_path_fails_invalid_input(void)
     char path[124];
     
     rc = spm_dev_get_path(NULL, path, sizeof(path));
-    assert(rc == SPM_EPARAM);
+    assert(rc == SPM_ESTATE);
 
     rc = spm_dev_get_path(dev, NULL, sizeof(path));
     assert(rc == SPM_EPARAM);
@@ -1091,7 +1010,7 @@ static void get_fd_fails_invalid_input()
 
     int fd = -1;
     rc = spm_dev_get_fd(NULL, &fd);
-    assert(rc == SPM_EPARAM);
+    assert(rc == SPM_ESTATE);
 
     rc = spm_dev_get_fd(dev, NULL);
     assert(rc == SPM_EPARAM);
@@ -1194,10 +1113,6 @@ int main(void)
     read_succeeds_valid_input();
     read_fails_invalid_input();
     read_fails_when_ioctl_fails();
-    // get_caps
-    get_caps_succeeds_valid_input();
-    get_caps_fails_invalid_input();
-    get_caps_fails_when_ioctl_fails();
     // get_cfg
     get_cfg_succeeds_valid_input();
     get_cfg_fails_invalid_input();

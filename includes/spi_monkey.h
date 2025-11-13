@@ -16,11 +16,10 @@ extern "C" {
 /* ===================== Constants ====================== */
 /* ====================================================== */
 
-#define SPM_DEFAULT_SPEED_HZ 5000000u   /* 5 MHz */
-#define SPM_MIN_BPW_VALUE    8
-#define SPM_MAX_BPW_VALUE    32  
-#define SPM_PATH_MAX         32 
-#define SPM_MAX_BATCH_XFERS 256
+#define SPM_DEFAULT_MAX_SPEED_HZ 25000000u
+#define SPM_DEFAULT_SPEED_HZ     5000000u   /* 5 MHz */
+#define SPM_PATH_MAX             32 
+#define SPM_MAX_BATCH_XFERS      256
 
 /* ====================================================== */
 /* ======================= Types ======================== */
@@ -61,20 +60,9 @@ typedef struct {
     uint8_t     bits_per_word;   /**< Bits per word (typically 8) */
     bool        lsb_first;       /**< Transmit LSB first (rare) */
     bool        cs_active_high;  /**< Chip-select active high */
-    uint32_t    timeout_ms;      /**< Transfer timeout (not widely supported) */
     uint16_t    delay_usecs;     /**< Inter-transfer delay in µs */
     bool        cs_change;       /**< Deassert CS between transfers */
 } spm_cfg_t;
-
-/**
- * @brief Device capability hints (best-effort).
- */
-typedef struct {
-    uint32_t    max_speed_hz;       /**< Maximum clock frequency */
-    uint8_t     min_bits_per_word;  /**< Minimum bits per word */
-    uint8_t     max_bits_per_word;  /**< Maximum bits per word */
-    uint32_t    features;           /**< Mode flags supported */
-} spm_cap_t;
 
 /* ====================================================== */
 /* ================= Device Lifecycle =================== */
@@ -231,24 +219,6 @@ spm_ecode_t spm_batch(
 /* ====================================================== */
 
 /**
- * @brief Get device capabilities (best-effort).
- * 
- * Queries current driver state and derives capability hints.
- * Values are inferred, not hardware limits. Use for guidance only.
- * 
- * @param dev       Device handle
- * @param out_caps  Output: capabilities (must not be NULL)
- * 
- * @return SPM_OK on success, error code otherwise
- * 
- * @note Does not modify dev->cfg
- */
-spm_ecode_t spm_dev_get_caps(
-    spm_device_t *dev,
-    spm_cap_t *out_caps
-);
-
-/**
  * @brief Read current config from kernel driver.
  * 
  * Queries spidev for active settings. Result reflects driver state,
@@ -295,7 +265,7 @@ spm_ecode_t spm_dev_set_cfg(
  * 
  * @return SPM_OK on success, error code otherwise
  * 
- * @note Policy fields (timeout, delay, cs_change) are not affected
+ * @note Policy fields (delay, cs_change) are not affected
  */
 spm_ecode_t spm_dev_refresh_cfg(
     spm_device_t *dev
